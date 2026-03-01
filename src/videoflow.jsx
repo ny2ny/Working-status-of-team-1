@@ -1,4 +1,19 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
+
+// ───── FIREBASE SETUP ─────
+const firebaseConfig = {
+  apiKey: "AIzaSyDJJGMaCGdIG0tuqI5t7wES8N6QH7Vv278",
+  authDomain: "video-production-df746.firebaseapp.com",
+  projectId: "video-production-df746",
+  storageBucket: "video-production-df746.firebasestorage.app",
+  messagingSenderId: "218260852391",
+  appId: "1:218260852391:web:080a30620a14a52bb29582"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const DATA_DOC = doc(db, "videoflow", "data");
 
 // ───── DATA SETUP ─────
 const VIDEO_TEAMS = {
@@ -92,7 +107,53 @@ export default function VideoFlow() {
   const [clientDepts, setClientDepts] = useState(INIT_CLIENT_DEPTS);
   const [videoTeamMembers, setVideoTeamMembers] = useState(VIDEO_TEAMS);
 
-  const [view, setView] = useState("board"); // board | monthly | completed | settings
+  // ── Firebase Storage ──
+  const [isLoading, setIsLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState("saved");
+  const saveTimerRef = useRef(null);
+  const loadedRef = useRef(false);
+  const remoteUpdateRef = useRef(false);
+
+  // 실시간 리스너 (다른 사용자 변경사항 자동 반영)
+  useEffect(() => {
+    const unsubscribe = onSnapshot(DATA_DOC, (snapshot) => {
+      if (snapshot.exists()) {
+        remoteUpdateRef.current = true;
+        const data = snapshot.data();
+        if (data.tasks) setTasks(data.tasks);
+        if (data.clientDepts) setClientDepts(data.clientDepts);
+        if (data.videoTeams) setVideoTeamMembers(data.videoTeams);
+        setTimeout(() => { remoteUpdateRef.current = false; }, 200);
+      }
+      setIsLoading(false);
+      setTimeout(() => { loadedRef.current = true; }, 50);
+    }, (error) => {
+      console.warn("Firestore 연결 오류:", error);
+      setIsLoading(false);
+      setTimeout(() => { loadedRef.current = true; }, 50);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Auto-save (debounced 800ms)
+  useEffect(() => {
+    if (!loadedRef.current || remoteUpdateRef.current) return;
+    setSaveStatus("saving");
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await setDoc(DATA_DOC, { tasks, clientDepts, videoTeams: videoTeamMembers });
+        setSaveStatus("saved");
+      } catch (e) {
+        console.warn("저장 오류:", e);
+        setSaveStatus("error");
+      }
+    }, 800);
+  }, [tasks, clientDepts, videoTeamMembers]);
+
+
+
+  const [view, setView] = useState("board"); // board | monthly | annual | members | completed | settings
   const [filterDept, setFilterDept] = useState("전체");
   const [filterStatus, setFilterStatus] = useState("전체");
   const [filterMonth, setFilterMonth] = useState(getYM(todayStr));
@@ -112,6 +173,7 @@ export default function VideoFlow() {
   const [newMemberName, setNewMemberName] = useState("");
   const [newVTMember, setNewVTMember] = useState("");
   const [newVTTeam, setNewVTTeam] = useState("영상기획1팀");
+
 
   // Form state
   const emptyForm = { name:"", clientDept:"콘텐츠사업부", clientTeam:"마케팅팀", pm:"", videoTeam:"영상기획1팀", assignees:[], startDate:todayStr, endDate:addDays(todayStr,4) };
@@ -479,7 +541,7 @@ export default function VideoFlow() {
     });
     return (
       <div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(340px,1fr))", gap:16, marginBottom:24 }}>
+        <div className="grid-completed" style={{ marginBottom:24 }}>
           {Object.entries(byTeam).map(([team, list])=>(
             <div key={team} style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:14, padding:22 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
@@ -518,7 +580,7 @@ export default function VideoFlow() {
     const validTeam = clientTeams.includes(settingsTeam) ? settingsTeam : clientTeams[0] || "";
 
     return (
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
+      <div className="grid-settings">
         {/* Client dept members */}
         <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:14, padding:22 }}>
           <div style={{ fontWeight:700, fontSize:16, color:"#f1f5f9", marginBottom:16 }}>의뢰부서 팀원 관리</div>
@@ -616,7 +678,7 @@ export default function VideoFlow() {
             </button>
           ))}
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:24 }}>
+        <div className="grid-stats" style={{ marginBottom:24 }}>
           {[{label:"전체 업무", val:yTotal, color:"#60a5fa"},{label:"진행중", val:yActive, color:"#3B82F6"},{label:"지연", val:yDelayed, color:"#EF4444"},{label:"완료", val:yCompleted, color:"#4ade80"}].map(s=>(
             <div key={s.label} style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:12, padding:"16px 18px" }}>
               <div style={{ fontSize:10, color:"#334155", marginBottom:4, textTransform:"uppercase", letterSpacing:"0.06em" }}>{s.label}</div>
@@ -625,7 +687,7 @@ export default function VideoFlow() {
             </div>
           ))}
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
+        <div className="grid-months">
           {MONTHS.map((mName, mi) => {
             const mNum = mi+1;
             const mTasks = byMonth[mNum];
@@ -725,7 +787,7 @@ export default function VideoFlow() {
             </div>
           </div>
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:24 }}>
+        <div className="grid-stats" style={{ marginBottom:24 }}>
           {[{label:"전체 업무", val:memberTasks.length, color:"#60a5fa"},{label:"완료", val:totalDone, color:"#4ade80"},{label:"진행중", val:totalActive, color:"#3B82F6"},{label:"평균 진척도", val:`${avgPct}%`, color:"#f59e0b"}].map(s=>(
             <div key={s.label} style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:12, padding:"14px 18px" }}>
               <div style={{ fontSize:10, color:"#334155", marginBottom:4, textTransform:"uppercase", letterSpacing:"0.06em" }}>{s.label}</div>
@@ -760,7 +822,7 @@ export default function VideoFlow() {
                 <div style={{ height:1, flex:1, background:"#1a2540" }}/>
                 <div style={{ fontSize:12, color:"#334155" }}>{mDone}/{mTasks.length} 완료</div>
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:12 }}>
+              <div className="grid-member-tasks">
                 {mTasks.map(task => {
                   const pct = getProgress(task);
                   const sm = getStatusMeta(task);
@@ -811,9 +873,47 @@ export default function VideoFlow() {
   ];
 
   // ── Main Render ──
+  if (isLoading) {
+    return (
+      <div style={{ minHeight:"100vh", background:"#040d1a", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", fontFamily:"'Noto Sans KR',sans-serif" }}>
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:700, fontSize:28, color:"#f1f5f9", marginBottom:16 }}>
+          <span style={{ color:"#3B82F6" }}>▶</span> VIDEO<span style={{ color:"#3B82F6" }}>FLOW</span>
+        </div>
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          {[0,1,2].map(i => (
+            <div key={i} style={{ width:8, height:8, borderRadius:"50%", background:"#3B82F6", animation:`pulse 1.2s ${i*0.2}s infinite ease-in-out` }}/>
+          ))}
+        </div>
+        <div style={{ fontSize:12, color:"#334155", marginTop:16 }}>데이터 불러오는 중...</div>
+        <style>{`@keyframes pulse { 0%,100%{opacity:0.2;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.2)} }`}</style>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight:"100vh", background:"#040d1a", color:"#f1f5f9", fontFamily:"'Noto Sans KR',sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+      <style>{`
+        @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
+        .grid-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
+        .grid-stats{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
+        .grid-months{display:grid;gap:14px;grid-template-columns:repeat(3,1fr)}
+        .grid-members{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr))}
+        .grid-member-tasks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
+        .grid-completed{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+        .grid-settings{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
+        @media(max-width:900px){
+          .grid-stats{grid-template-columns:repeat(2,1fr)}
+          .grid-months{grid-template-columns:repeat(2,1fr)}
+        }
+        @media(max-width:560px){
+          .grid-stats{grid-template-columns:repeat(2,1fr)}
+          .grid-months{grid-template-columns:1fr}
+          .grid-cards{grid-template-columns:1fr}
+        }
+      `}</style>
 
       {/* Header */}
       <div style={{ background:"#070f1e", borderBottom:"1px solid #0f1e38", padding:"0 28px", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 20px rgba(0,0,0,0.4)" }}>
@@ -823,6 +923,21 @@ export default function VideoFlow() {
               <span style={{ color:"#3B82F6" }}>▶</span> VIDEO<span style={{ color:"#3B82F6" }}>FLOW</span>
             </div>
             <div style={{ fontSize:11, color:"#1e3a5f", fontFamily:"'IBM Plex Mono',monospace", background:"#0b1929", padding:"3px 10px", borderRadius:6 }}>영상사업부 업무관리</div>
+            {/* Save indicator */}
+            <div style={{ display:"flex", alignItems:"center", gap:5, padding:"3px 10px", borderRadius:6,
+              background: saveStatus==="saving"?"#0a1929": saveStatus==="error"?"#2d0a0a":"#0a1e0f",
+              border: `1px solid ${saveStatus==="saving"?"#1d4ed8": saveStatus==="error"?"#7f1d1d":"#166534"}`,
+              animation: saveStatus==="saved"?"fadeIn 0.3s ease":undefined,
+              transition:"all 0.3s" }}>
+              <div style={{ width:6, height:6, borderRadius:"50%",
+                background: saveStatus==="saving"?"#3B82F6": saveStatus==="error"?"#ef4444":"#22c55e",
+                boxShadow: saveStatus==="saving"?"0 0 6px #3B82F6":saveStatus==="saved"?"0 0 6px #22c55e":undefined,
+                animation: saveStatus==="saving"?"pulse 1s infinite ease-in-out":undefined }}/>
+              <span style={{ fontSize:10, fontFamily:"'IBM Plex Mono',monospace",
+                color: saveStatus==="saving"?"#60a5fa": saveStatus==="error"?"#f87171":"#4ade80" }}>
+                {saveStatus==="saving"?"저장 중...": saveStatus==="error"?"저장 실패 (재시도 중)":"저장됨"}
+              </span>
+            </div>
           </div>
           <div style={{ display:"flex", gap:6, alignItems:"center" }}>
             {[["board","업무보드"],["monthly","월별"],["annual","연간"],["members","팀원보드"],["completed","완료현황"],["settings","⚙ 팀원관리"]].map(([v,l])=>(
@@ -845,7 +960,7 @@ export default function VideoFlow() {
         {view === "board" && (
           <>
             {/* Stats */}
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
+            <div className="grid-stats" style={{ marginBottom:20 }}>
               {stats.map(s=>(
                 <div key={s.label} style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:10, padding:"13px 16px" }}>
                   <div style={{ fontSize:10, color:"#334155", marginBottom:3, textTransform:"uppercase", letterSpacing:"0.05em" }}>{s.label}</div>
@@ -880,7 +995,7 @@ export default function VideoFlow() {
               ))}
             </div>
 
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(360px,1fr))", gap:14 }}>
+            <div className="grid-cards">
               {filteredTasks.map(t=><TaskCard key={t.id} task={t}/>)}
               {filteredTasks.length===0 && <div style={{ gridColumn:"1/-1", textAlign:"center", padding:48, color:"#1e3a5f" }}>해당 조건의 업무가 없습니다.</div>}
             </div>
@@ -917,7 +1032,7 @@ export default function VideoFlow() {
                       <div style={{ fontWeight:700, fontSize:15, color:"#60a5fa" }}>{team}</div>
                       <div style={{ height:1, flex:1, background:"#1a2540" }}/>
                     </div>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:12 }}>
+                    <div className="grid-members">
                       {members.map(m => {
                         const mTasks = tasks.filter(t=>t.assignees.includes(m));
                         const done = mTasks.filter(t=>t.status==="completed").length;
