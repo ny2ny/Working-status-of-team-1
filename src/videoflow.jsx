@@ -898,47 +898,73 @@ export default function VideoFlow() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
         *{box-sizing:border-box}
+
+        /* 그리드 레이아웃 */
         .grid-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
         .grid-stats{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
-        .grid-months{display:grid;gap:14px;grid-template-columns:repeat(3,1fr)}
+        .grid-months{display:grid;gap:14px;grid-template-columns:repeat(4,1fr)}
         .grid-members{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr))}
         .grid-member-tasks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
         .grid-completed{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
         .grid-settings{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
-        .nav-buttons{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+        /* 헤더 */
+        .header-wrap{background:#070f1e;border-bottom:1px solid #0f1e38;padding:0 28px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.4)}
         .header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:58px;gap:8px}
-        .header-left{display:flex;align-items:center;gap:12px;min-width:0;flex-shrink:0}
-        .header-subtitle{font-size:11px;color:#1e3a5f;font-family:'IBM Plex Mono',monospace;background:#0b1929;padding:3px 10px;border-radius:6px}
+        .header-left{display:flex;align-items:center;gap:10px;flex-shrink:0}
+        .header-subtitle{font-size:11px;color:#1e3a5f;font-family:'IBM Plex Mono',monospace;background:#0b1929;padding:3px 10px;border-radius:6px;white-space:nowrap}
+        .nav-buttons{display:flex;gap:5px;align-items:center;flex-wrap:nowrap}
         .main-pad{max-width:1440px;margin:0 auto;padding:24px 28px}
-        .filter-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-        .modal-inner{background:#0b1120;border:1px solid #1a2540;border-radius:20px;padding:30px;width:90%;max-width:500px;max-height:88vh;overflow:auto}
-        .modal-inner-sm{background:#0b1120;border:1px solid #1a2540;border-radius:20px;padding:30px;width:90%;max-width:420px}
-        @media(max-width:900px){
-          .grid-stats{grid-template-columns:repeat(2,1fr)}
-          .grid-months{grid-template-columns:repeat(2,1fr)}
+
+        /* PC 대형 (1200px 이상): 기본값 유지 */
+
+        /* PC 중형 (900px ~ 1200px) */
+        @media(max-width:1200px){
+          .grid-months{grid-template-columns:repeat(3,1fr)}
           .header-subtitle{display:none}
         }
-        @media(max-width:700px){
-          .header-inner{height:auto;padding:10px 0;flex-wrap:wrap}
-          .nav-buttons{gap:4px}
-          .nav-buttons button{padding:5px 9px!important;font-size:11px!important}
-          .main-pad{padding:16px 14px}
-        }
-        @media(max-width:560px){
+
+        /* PC 소형 (768px ~ 900px) */
+        @media(max-width:900px){
           .grid-stats{grid-template-columns:repeat(2,1fr)}
-          .grid-months{grid-template-columns:1fr}
+          .grid-months{grid-template-columns:repeat(3,1fr)}
+          .grid-cards{grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
+          .header-wrap{padding:0 16px}
+          .main-pad{padding:18px 16px}
+          .nav-buttons button{padding:5px 10px!important;font-size:11px!important}
+        }
+
+        /* 태블릿 (700px ~ 768px) */
+        @media(max-width:768px){
+          .header-inner{height:auto;padding:8px 0;flex-wrap:wrap;justify-content:flex-start;gap:6px}
+          .nav-buttons{flex-wrap:wrap;gap:4px}
+          .grid-months{grid-template-columns:repeat(2,1fr)}
+          .grid-settings{grid-template-columns:1fr}
+          .main-pad{padding:14px 12px}
+        }
+
+        /* 모바일 (560px 이하) */
+        @media(max-width:560px){
+          .header-wrap{padding:0 10px}
+          .header-inner{padding:8px 0;gap:5px}
+          .grid-stats{grid-template-columns:repeat(2,1fr)}
+          .grid-months{grid-template-columns:repeat(2,1fr)}
           .grid-cards{grid-template-columns:1fr}
           .grid-settings{grid-template-columns:1fr}
           .grid-completed{grid-template-columns:1fr}
-          .nav-buttons button{padding:5px 7px!important;font-size:10px!important}
-          .modal-inner{padding:18px;border-radius:14px}
-          .modal-inner-sm{padding:18px;border-radius:14px}
-          .main-pad{padding:12px 10px}
+          .nav-buttons button{padding:4px 7px!important;font-size:10px!important}
+          .main-pad{padding:10px 10px}
+        }
+
+        /* 소형 모바일 (400px 이하) */
+        @media(max-width:400px){
+          .grid-months{grid-template-columns:1fr}
+          .grid-stats{grid-template-columns:repeat(2,1fr)}
         }
       `}</style>
 
       {/* Header */}
-      <div style={{ background:"#070f1e", borderBottom:"1px solid #0f1e38", padding:"0 28px", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 20px rgba(0,0,0,0.4)" }}>
+      <div className="header-wrap">
         <div className="header-inner">
           <div className="header-left">
             <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:700, fontSize:17, color:"#f1f5f9", flexShrink:0 }}>
