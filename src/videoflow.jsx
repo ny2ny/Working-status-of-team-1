@@ -897,6 +897,7 @@ export default function VideoFlow() {
       <style>{`
         @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
+        *{box-sizing:border-box}
         .grid-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
         .grid-stats{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
         .grid-months{display:grid;gap:14px;grid-template-columns:repeat(3,1fr)}
@@ -904,27 +905,48 @@ export default function VideoFlow() {
         .grid-member-tasks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
         .grid-completed{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
         .grid-settings{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
+        .nav-buttons{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+        .header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:58px;gap:8px}
+        .header-left{display:flex;align-items:center;gap:12px;min-width:0;flex-shrink:0}
+        .header-subtitle{font-size:11px;color:#1e3a5f;font-family:'IBM Plex Mono',monospace;background:#0b1929;padding:3px 10px;border-radius:6px}
+        .main-pad{max-width:1440px;margin:0 auto;padding:24px 28px}
+        .filter-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+        .modal-inner{background:#0b1120;border:1px solid #1a2540;border-radius:20px;padding:30px;width:90%;max-width:500px;max-height:88vh;overflow:auto}
+        .modal-inner-sm{background:#0b1120;border:1px solid #1a2540;border-radius:20px;padding:30px;width:90%;max-width:420px}
         @media(max-width:900px){
           .grid-stats{grid-template-columns:repeat(2,1fr)}
           .grid-months{grid-template-columns:repeat(2,1fr)}
+          .header-subtitle{display:none}
+        }
+        @media(max-width:700px){
+          .header-inner{height:auto;padding:10px 0;flex-wrap:wrap}
+          .nav-buttons{gap:4px}
+          .nav-buttons button{padding:5px 9px!important;font-size:11px!important}
+          .main-pad{padding:16px 14px}
         }
         @media(max-width:560px){
           .grid-stats{grid-template-columns:repeat(2,1fr)}
           .grid-months{grid-template-columns:1fr}
           .grid-cards{grid-template-columns:1fr}
+          .grid-settings{grid-template-columns:1fr}
+          .grid-completed{grid-template-columns:1fr}
+          .nav-buttons button{padding:5px 7px!important;font-size:10px!important}
+          .modal-inner{padding:18px;border-radius:14px}
+          .modal-inner-sm{padding:18px;border-radius:14px}
+          .main-pad{padding:12px 10px}
         }
       `}</style>
 
       {/* Header */}
       <div style={{ background:"#070f1e", borderBottom:"1px solid #0f1e38", padding:"0 28px", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 20px rgba(0,0,0,0.4)" }}>
-        <div style={{ maxWidth:1440, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:58 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:700, fontSize:17, color:"#f1f5f9" }}>
+        <div className="header-inner">
+          <div className="header-left">
+            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:700, fontSize:17, color:"#f1f5f9", flexShrink:0 }}>
               <span style={{ color:"#3B82F6" }}>▶</span> VIDEO<span style={{ color:"#3B82F6" }}>FLOW</span>
             </div>
-            <div style={{ fontSize:11, color:"#1e3a5f", fontFamily:"'IBM Plex Mono',monospace", background:"#0b1929", padding:"3px 10px", borderRadius:6 }}>영상사업부 업무관리</div>
+            <div className="header-subtitle">영상사업부 업무관리</div>
             {/* Save indicator */}
-            <div style={{ display:"flex", alignItems:"center", gap:5, padding:"3px 10px", borderRadius:6,
+            <div style={{ display:"flex", alignItems:"center", gap:5, padding:"3px 10px", borderRadius:6, flexShrink:0,
               background: saveStatus==="saving"?"#0a1929": saveStatus==="error"?"#2d0a0a":"#0a1e0f",
               border: `1px solid ${saveStatus==="saving"?"#1d4ed8": saveStatus==="error"?"#7f1d1d":"#166534"}`,
               animation: saveStatus==="saved"?"fadeIn 0.3s ease":undefined,
@@ -935,26 +957,26 @@ export default function VideoFlow() {
                 animation: saveStatus==="saving"?"pulse 1s infinite ease-in-out":undefined }}/>
               <span style={{ fontSize:10, fontFamily:"'IBM Plex Mono',monospace",
                 color: saveStatus==="saving"?"#60a5fa": saveStatus==="error"?"#f87171":"#4ade80" }}>
-                {saveStatus==="saving"?"저장 중...": saveStatus==="error"?"저장 실패 (재시도 중)":"저장됨"}
+                {saveStatus==="saving"?"저장 중...": saveStatus==="error"?"저장 실패":"저장됨"}
               </span>
             </div>
           </div>
-          <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-            {[["board","업무보드"],["monthly","월별"],["annual","연간"],["members","팀원보드"],["completed","완료현황"],["settings","⚙ 팀원관리"]].map(([v,l])=>(
+          <div className="nav-buttons">
+            {[["board","업무보드"],["monthly","월별"],["annual","연간"],["members","팀원"],["completed","완료"],["settings","⚙ 관리"]].map(([v,l])=>(
               <button key={v} onClick={()=>setView(v)}
                 style={{ padding:"6px 14px", borderRadius:8, border:`1px solid ${view===v?"#3B82F6":"#0f1e38"}`,
                   background:view===v?"#0d2348":"none", color:view===v?"#60a5fa":"#475569", fontWeight:600, fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
                 {l}
               </button>
             ))}
-            <button onClick={openAdd} style={{ padding:"6px 16px", borderRadius:8, border:"none", background:"#1d4ed8", color:"#fff", fontWeight:700, fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
-              + 업무 추가
+            <button onClick={openAdd} style={{ padding:"6px 16px", borderRadius:8, border:"none", background:"#1d4ed8", color:"#fff", fontWeight:700, fontSize:12, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>
+              + 추가
             </button>
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth:1440, margin:"0 auto", padding:"24px 28px" }}>
+      <div className="main-pad">
 
         {/* ── Board View ── */}
         {view === "board" && (
@@ -1069,8 +1091,8 @@ export default function VideoFlow() {
 
       {/* ── Detail Modal ── */}
       {detailModal && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, backdropFilter:"blur(6px)" }} onClick={()=>setDetailModal(null)}>
-          <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:20, padding:30, width:"90%", maxWidth:520, maxHeight:"80vh", overflow:"auto" }} onClick={e=>e.stopPropagation()}>
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, backdropFilter:"blur(6px)", padding:"16px" }} onClick={()=>setDetailModal(null)}>
+          <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:20, padding:"20px", width:"100%", maxWidth:520, maxHeight:"85vh", overflow:"auto" }} onClick={e=>e.stopPropagation()}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:18 }}>
               <div>
                 <div style={{ display:"flex", gap:6, marginBottom:5 }}>
@@ -1107,8 +1129,8 @@ export default function VideoFlow() {
 
       {/* ── Check-in Modal ── */}
       {checkInModal && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, backdropFilter:"blur(6px)" }}>
-          <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:20, padding:30, width:"90%", maxWidth:420 }}>
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, backdropFilter:"blur(6px)", padding:"16px" }}>
+          <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:20, padding:"20px", width:"100%", maxWidth:420 }}>
             <div style={{ fontSize:11, color:"#334155", marginBottom:3 }}>퇴근 체크인 · {todayStr}</div>
             <div style={{ fontSize:18, fontWeight:800, color:"#f1f5f9", marginBottom:20 }}>{checkInModal.name}</div>
             <label style={lbl}>현재 진척도</label>
@@ -1132,8 +1154,8 @@ export default function VideoFlow() {
 
       {/* ── Task Add/Edit Modal ── */}
       {taskModal !== null && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, backdropFilter:"blur(6px)" }}>
-          <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:20, padding:30, width:"90%", maxWidth:500, maxHeight:"88vh", overflow:"auto" }}>
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, backdropFilter:"blur(6px)", padding:"16px" }}>
+          <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:20, padding:"20px", width:"100%", maxWidth:500, maxHeight:"90vh", overflow:"auto" }}>
             <div style={{ fontWeight:800, fontSize:17, color:"#f1f5f9", marginBottom:22 }}>{taskModal==="add"?"새 업무 추가":"업무 수정"}</div>
             {TaskForm()}
             <div style={{ display:"flex", gap:8, marginTop:22 }}>
