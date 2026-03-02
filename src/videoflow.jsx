@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import * as XLSX from "xlsx";
 
 // ───── FIREBASE SETUP ─────
 const firebaseConfig = {
@@ -645,8 +646,102 @@ export default function VideoFlow() {
     const clientTeams = Object.keys(clientDepts[settingsDept]?.teams || {});
     const validTeam = clientTeams.includes(settingsTeam) ? settingsTeam : clientTeams[0] || "";
 
+    // ── 엑셀 백업 ──
+    const exportExcel = () => {
+      const statusLabel = { active:"진행중", delayed:"지연", completed:"완료" };
+
+      // 시트1: 업무 목록
+      const taskRows = tasks.map(t => ({
+        "업무명": t.name,
+        "의뢰부서": t.clientDept,
+        "의뢰팀": t.clientTeam,
+        "PM": t.pm || "",
+        "제작팀": t.videoTeam,
+        "담당자": t.assignees.join(", "),
+        "시작일": t.startDate,
+        "종료일": t.endDate,
+        "상태": statusLabel[t.status] || t.status,
+        "진척도(%)": t.progressLog.length > 0 ? t.progressLog[t.progressLog.length-1].progress : 0,
+        "최근메모": t.progressLog.length > 0 ? t.progressLog[t.progressLog.length-1].note : "",
+      }));
+
+      // 시트2: 퇴근 체크 로그
+      const logRows = [];
+      tasks.forEach(t => {
+        t.progressLog.forEach(l => {
+          logRows.push({
+            "업무명": t.name,
+            "의뢰부서": t.clientDept,
+            "제작팀": t.videoTeam,
+            "담당자": t.assignees.join(", "),
+            "날짜": l.date,
+            "진척도(%)": l.progress,
+            "메모": l.note,
+          });
+        });
+      });
+      logRows.sort((a,b) => b["날짜"].localeCompare(a["날짜"]));
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(taskRows), "업무목록");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(logRows), "체크인로그");
+
+      const date = new Date();
+      const dateStr = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}`;
+      XLSX.writeFile(wb, `VideoFlow_백업_${dateStr}.xlsx`);
+    };
+
+    const exportCSV = () => {
+      const statusLabel = { active:"진행중", delayed:"지연", completed:"완료" };
+      const rows = [
+        ["업무명","의뢰부서","의뢰팀","PM","제작팀","담당자","시작일","종료일","상태","진척도(%)","최근메모"],
+        ...tasks.map(t => [
+          t.name, t.clientDept, t.clientTeam, t.pm||"", t.videoTeam,
+          t.assignees.join("/"), t.startDate, t.endDate,
+          statusLabel[t.status]||t.status,
+          t.progressLog.length>0 ? t.progressLog[t.progressLog.length-1].progress : 0,
+          t.progressLog.length>0 ? t.progressLog[t.progressLog.length-1].note : "",
+        ])
+      ];
+      const csv = "\uFEFF" + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const date = new Date();
+      const dateStr = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}`;
+      a.href = url; a.download = `VideoFlow_백업_${dateStr}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    };
+
     return (
-      <div style={gridSettings}>
+      <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
+
+        {/* ── 백업 카드 ── */}
+        <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:14, padding:22 }}>
+          <div style={{ fontWeight:700, fontSize:16, color:"#f1f5f9", marginBottom:6 }}>📥 데이터 백업</div>
+          <div style={{ fontSize:12, color:"#475569", marginBottom:18 }}>
+            현재 등록된 <span style={{ color:"#60a5fa", fontWeight:700 }}>{tasks.length}개</span> 업무와 체크인 기록을 파일로 내보냅니다.
+          </div>
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+            <button onClick={exportExcel}
+              style={{ display:"flex", alignItems:"center", gap:8, padding:"11px 20px", borderRadius:10,
+                border:"1px solid #166534", background:"#052e16", color:"#4ade80",
+                fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>
+              <span style={{ fontSize:18 }}>📊</span> 엑셀로 내보내기 (.xlsx)
+            </button>
+            <button onClick={exportCSV}
+              style={{ display:"flex", alignItems:"center", gap:8, padding:"11px 20px", borderRadius:10,
+                border:"1px solid #1d4ed8", background:"#0c1a2e", color:"#60a5fa",
+                fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>
+              <span style={{ fontSize:18 }}>📄</span> CSV로 내보내기 (.csv)
+            </button>
+          </div>
+          <div style={{ marginTop:14, fontSize:11, color:"#334155" }}>
+            ✓ 업무목록 시트 &nbsp;·&nbsp; ✓ 퇴근체크 로그 시트 &nbsp;·&nbsp; ✓ 날짜 자동 파일명
+          </div>
+        </div>
+
+        <div style={gridSettings}>
         {/* Client dept members */}
         <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:14, padding:22 }}>
           <div style={{ fontWeight:700, fontSize:16, color:"#f1f5f9", marginBottom:16 }}>의뢰부서 팀원 관리</div>
@@ -709,7 +804,8 @@ export default function VideoFlow() {
             <button onClick={addVideoMember} style={{ padding:"9px 14px", borderRadius:8, border:"none", background:"#1d4ed8", color:"#fff", fontWeight:700, cursor:"pointer", fontSize:12, fontFamily:"inherit", whiteSpace:"nowrap" }}>+ 추가</button>
           </div>
         </div>
-      </div>
+      </div>  {/* end gridSettings */}
+    </div>   {/* end outer flex column */}
     );
   };
 
