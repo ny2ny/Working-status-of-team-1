@@ -908,58 +908,63 @@ export default function VideoFlow() {
         .grid-completed{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
         .grid-settings{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
 
-        /* 헤더 */
-        .header-wrap{background:#070f1e;border-bottom:1px solid #0f1e38;padding:0 28px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.4)}
-        .header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:58px;gap:8px}
-        .header-left{display:flex;align-items:center;gap:10px;flex-shrink:0}
-        .header-subtitle{font-size:11px;color:#1e3a5f;font-family:'IBM Plex Mono',monospace;background:#0b1929;padding:3px 10px;border-radius:6px;white-space:nowrap}
-        .nav-buttons{display:flex;gap:5px;align-items:center;flex-wrap:nowrap}
+        /* 헤더 - 항상 1줄 유지 */
+        .header-wrap{background:#070f1e;border-bottom:1px solid #0f1e38;padding:0 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.4)}
+        .header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:12px;overflow:hidden}
+        .header-left{display:flex;align-items:center;gap:10px;flex-shrink:0;min-width:0}
+        .header-logo{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;color:#f1f5f9;white-space:nowrap;flex-shrink:0}
+        .header-subtitle{font-size:11px;color:#1e3a5f;font-family:'IBM Plex Mono',monospace;background:#0b1929;padding:3px 8px;border-radius:6px;white-space:nowrap}
+        .save-indicator{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;flex-shrink:0;white-space:nowrap}
+
+        /* 네비게이션 - 항상 1줄, 스크롤 가능 */
+        .nav-scroll{display:flex;align-items:center;gap:5px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+        .nav-scroll::-webkit-scrollbar{display:none}
+        .nav-btn{padding:6px 12px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:all 0.15s}
+        .nav-add{padding:6px 14px;border-radius:8px;border:none;background:#1d4ed8;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+
         .main-pad{max-width:1440px;margin:0 auto;padding:24px 28px}
 
-        /* PC 대형 (1200px 이상): 기본값 유지 */
-
-        /* PC 중형 (900px ~ 1200px) */
+        /* 1200px 이하 */
         @media(max-width:1200px){
           .grid-months{grid-template-columns:repeat(3,1fr)}
           .header-subtitle{display:none}
         }
 
-        /* PC 소형 (768px ~ 900px) */
+        /* 900px 이하 */
         @media(max-width:900px){
           .grid-stats{grid-template-columns:repeat(2,1fr)}
           .grid-months{grid-template-columns:repeat(3,1fr)}
-          .grid-cards{grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
-          .header-wrap{padding:0 16px}
-          .main-pad{padding:18px 16px}
-          .nav-buttons button{padding:5px 10px!important;font-size:11px!important}
+          .header-wrap{padding:0 14px}
+          .main-pad{padding:16px 14px}
+          .nav-btn{padding:5px 9px!important;font-size:11px!important}
+          .nav-add{padding:5px 10px!important;font-size:11px!important}
         }
 
-        /* 태블릿 (700px ~ 768px) */
+        /* 768px 이하 (태블릿) */
         @media(max-width:768px){
-          .header-inner{height:auto;padding:8px 0;flex-wrap:wrap;justify-content:flex-start;gap:6px}
-          .nav-buttons{flex-wrap:wrap;gap:4px}
           .grid-months{grid-template-columns:repeat(2,1fr)}
           .grid-settings{grid-template-columns:1fr}
           .main-pad{padding:14px 12px}
+          .nav-btn{padding:5px 8px!important;font-size:10px!important}
+          .nav-add{padding:5px 8px!important;font-size:10px!important}
         }
 
-        /* 모바일 (560px 이하) */
+        /* 560px 이하 (모바일) */
         @media(max-width:560px){
-          .header-wrap{padding:0 10px}
-          .header-inner{padding:8px 0;gap:5px}
           .grid-stats{grid-template-columns:repeat(2,1fr)}
           .grid-months{grid-template-columns:repeat(2,1fr)}
           .grid-cards{grid-template-columns:1fr}
           .grid-settings{grid-template-columns:1fr}
           .grid-completed{grid-template-columns:1fr}
-          .nav-buttons button{padding:4px 7px!important;font-size:10px!important}
-          .main-pad{padding:10px 10px}
+          .main-pad{padding:10px}
+          .header-wrap{padding:0 10px}
+          .nav-btn{padding:4px 7px!important;font-size:10px!important}
+          .header-logo{font-size:14px}
         }
 
-        /* 소형 모바일 (400px 이하) */
+        /* 400px 이하 */
         @media(max-width:400px){
           .grid-months{grid-template-columns:1fr}
-          .grid-stats{grid-template-columns:repeat(2,1fr)}
         }
       `}</style>
 
@@ -967,15 +972,13 @@ export default function VideoFlow() {
       <div className="header-wrap">
         <div className="header-inner">
           <div className="header-left">
-            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:700, fontSize:17, color:"#f1f5f9", flexShrink:0 }}>
+            <div className="header-logo">
               <span style={{ color:"#3B82F6" }}>▶</span> VIDEO<span style={{ color:"#3B82F6" }}>FLOW</span>
             </div>
             <div className="header-subtitle">영상사업부 업무관리</div>
-            {/* Save indicator */}
-            <div style={{ display:"flex", alignItems:"center", gap:5, padding:"3px 10px", borderRadius:6, flexShrink:0,
+            <div className="save-indicator" style={{
               background: saveStatus==="saving"?"#0a1929": saveStatus==="error"?"#2d0a0a":"#0a1e0f",
               border: `1px solid ${saveStatus==="saving"?"#1d4ed8": saveStatus==="error"?"#7f1d1d":"#166534"}`,
-              animation: saveStatus==="saved"?"fadeIn 0.3s ease":undefined,
               transition:"all 0.3s" }}>
               <div style={{ width:6, height:6, borderRadius:"50%",
                 background: saveStatus==="saving"?"#3B82F6": saveStatus==="error"?"#ef4444":"#22c55e",
@@ -987,17 +990,15 @@ export default function VideoFlow() {
               </span>
             </div>
           </div>
-          <div className="nav-buttons">
+          <div className="nav-scroll">
             {[["board","업무보드"],["monthly","월별"],["annual","연간"],["members","팀원"],["completed","완료"],["settings","⚙ 관리"]].map(([v,l])=>(
-              <button key={v} onClick={()=>setView(v)}
-                style={{ padding:"6px 14px", borderRadius:8, border:`1px solid ${view===v?"#3B82F6":"#0f1e38"}`,
-                  background:view===v?"#0d2348":"none", color:view===v?"#60a5fa":"#475569", fontWeight:600, fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
+              <button key={v} onClick={()=>setView(v)} className="nav-btn"
+                style={{ border:`1px solid ${view===v?"#3B82F6":"#0f1e38"}`,
+                  background:view===v?"#0d2348":"none", color:view===v?"#60a5fa":"#475569" }}>
                 {l}
               </button>
             ))}
-            <button onClick={openAdd} style={{ padding:"6px 16px", borderRadius:8, border:"none", background:"#1d4ed8", color:"#fff", fontWeight:700, fontSize:12, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>
-              + 추가
-            </button>
+            <button onClick={openAdd} className="nav-add">+ 추가</button>
           </div>
         </div>
       </div>
