@@ -64,7 +64,7 @@ const INIT_CLIENT_DEPTS = {
   },
 };
 
-const today = new Date(2026, 1, 28);
+const today = new Date();
 const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 const addDays = (str, n) => { const d = new Date(str); d.setDate(d.getDate()+n); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const diffDays = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
@@ -913,13 +913,13 @@ export default function VideoFlow() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
         *{box-sizing:border-box}
-        .grid-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"100%":"320px"},1fr))}
-        .grid-stats{display:grid;gap:10px;grid-template-columns:repeat(${isMobile?2:4},1fr)}
+        .grid-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"100%":isTablet?"280px":"320px"},1fr))}
+        .grid-stats{display:grid;gap:10px;grid-template-columns:repeat(${W<900?2:4},1fr)}
         .grid-months{display:grid;gap:14px;grid-template-columns:repeat(${W<400?1:W<560?2:W<900?2:W<1200?3:4},1fr)}
-        .grid-members{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
-        .grid-member-tasks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"100%":"280px"},1fr))}
-        .grid-completed{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(${isMobile?"100%":"320px"},1fr))}
-        .grid-settings{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(${isMobile?"100%":"360px"},1fr))}
+        .grid-members{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"130px":"160px"},1fr))}
+        .grid-member-tasks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"100%":isTablet?"240px":"280px"},1fr))}
+        .grid-completed{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(${isMobile?"100%":isTablet?"260px":"320px"},1fr))}
+        .grid-settings{display:grid;gap:20px;grid-template-columns:${W<768?"1fr":"repeat(auto-fit,minmax(360px,1fr))"}}
         .nav-scroll{display:flex;align-items:center;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap}
         .nav-scroll::-webkit-scrollbar{display:none}
       `}</style>
@@ -956,18 +956,18 @@ export default function VideoFlow() {
           <div className="nav-scroll" style={{ flexShrink:1, minWidth:0 }}>
             {[["board","업무보드"],["monthly","월별"],["annual","연간"],["members","팀원"],["completed","완료"],["settings","⚙ 관리"]].map(([v,l])=>(
               <button key={v} onClick={()=>setView(v)}
-                style={{ padding:isMobile?"4px 7px":"5px 11px", borderRadius:8,
+                style={{ padding:isMobile?"4px 7px":isTablet?"5px 9px":"6px 13px", borderRadius:8,
                   border:`1px solid ${view===v?"#3B82F6":"#0f1e38"}`,
                   background:view===v?"#0d2348":"none", color:view===v?"#60a5fa":"#475569",
-                  fontWeight:600, fontSize:isMobile?10:11, cursor:"pointer", fontFamily:"inherit",
+                  fontWeight:600, fontSize:isMobile?10:isTablet?11:12, cursor:"pointer", fontFamily:"inherit",
                   whiteSpace:"nowrap", flexShrink:0 }}>
                 {l}
               </button>
             ))}
             <button onClick={openAdd}
-              style={{ padding:isMobile?"4px 8px":"5px 12px", borderRadius:8, border:"none",
+              style={{ padding:isMobile?"4px 8px":isTablet?"5px 10px":"6px 14px", borderRadius:8, border:"none",
                 background:"#1d4ed8", color:"#fff", fontWeight:700,
-                fontSize:isMobile?10:11, cursor:"pointer", fontFamily:"inherit",
+                fontSize:isMobile?10:isTablet?11:12, cursor:"pointer", fontFamily:"inherit",
                 whiteSpace:"nowrap", flexShrink:0 }}>
               + 추가
             </button>
