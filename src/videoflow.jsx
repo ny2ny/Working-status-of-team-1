@@ -260,7 +260,7 @@ export default function VideoFlow() {
   const saveTask = () => {
     if (!form.name.trim()) return;
     if (taskModal === "add") {
-      setTasks(prev => [...prev, { ...form, id: Date.now(), status: "active", progressLog: [] }]);
+      setTasks(prev => [{ ...form, id: Date.now(), status: "active", progressLog: [] }, ...prev]);
     } else {
       setTasks(prev => prev.map(t => t.id === taskModal.id ? { ...t, ...form } : t));
     }
