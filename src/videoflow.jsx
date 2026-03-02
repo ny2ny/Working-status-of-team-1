@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 
 // ───── FIREBASE SETUP ─────
 const firebaseConfig = {
@@ -13,6 +14,8 @@ const firebaseConfig = {
 };
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
+const auth = getAuth(fbApp);
+const provider = new GoogleAuthProvider();
 const DATA_DOC = doc(db, "videoflow", "data");
 
 // ───── RESPONSIVE HOOK ─────
@@ -118,6 +121,28 @@ export default function VideoFlow() {
   const isMobile = W < 560;
   const isTablet = W >= 560 && W < 900;
   const isPC = W >= 900;
+
+  // ── Auth 상태 ──
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleLogin = async () => {
+    try { await signInWithPopup(auth, provider); }
+    catch (e) { console.error("로그인 실패:", e); }
+  };
+
+  const handleLogout = async () => {
+    try { await signOut(auth); }
+    catch (e) { console.error("로그아웃 실패:", e); }
+  };
 
   // ── 반응형 그리드 - 명시적 열 수로 직접 지정 ──
   const col = (sm, md, lg, xl) => {
@@ -915,20 +940,62 @@ export default function VideoFlow() {
   ];
 
   // ── Main Render ──
+  const FONTS = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap";
+  const bgWrap = { minHeight:"100vh", background:"#040d1a", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", fontFamily:"'Noto Sans KR',sans-serif" };
+  const logoEl = <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:700, fontSize:28, color:"#f1f5f9", marginBottom:8 }}><span style={{ color:"#3B82F6" }}>▶</span> VIDEO<span style={{ color:"#3B82F6" }}>FLOW</span></div>;
+  const pulseStyle = `@keyframes pulse { 0%,100%{opacity:0.2;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.2)} } @keyframes spin{to{transform:rotate(360deg)}}`;
+
+  // 인증 로딩 중
+  if (authLoading) {
+    return (
+      <div style={bgWrap}>
+        <link href={FONTS} rel="stylesheet"/>
+        {logoEl}
+        <div style={{ width:24, height:24, border:"3px solid #1d4ed8", borderTop:"3px solid transparent", borderRadius:"50%", animation:"spin 0.8s linear infinite", marginTop:20 }}/>
+        <style>{pulseStyle}</style>
+      </div>
+    );
+  }
+
+  // 로그인 화면
+  if (!user) {
+    return (
+      <div style={bgWrap}>
+        <link href={FONTS} rel="stylesheet"/>
+        <style>{pulseStyle}</style>
+        <div style={{ textAlign:"center", padding:"40px 32px", background:"#0b1120", border:"1px solid #1a2540", borderRadius:24, maxWidth:360, width:"90%" }}>
+          {logoEl}
+          <div style={{ fontSize:12, color:"#475569", marginBottom:32, fontFamily:"'IBM Plex Mono',monospace" }}>영상사업부 업무관리 시스템</div>
+          <button onClick={handleLogin} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:12, padding:"13px 20px", borderRadius:12, border:"1px solid #1e293b", background:"#fff", color:"#1a1a1a", fontWeight:700, fontSize:15, cursor:"pointer", fontFamily:"inherit", transition:"all 0.2s" }}
+            onMouseEnter={e=>e.currentTarget.style.background="#f1f5f9"}
+            onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+            {/* Google 로고 SVG */}
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Google 계정으로 로그인
+          </button>
+          <div style={{ marginTop:16, fontSize:11, color:"#1e3a5f" }}>회사 Google 계정으로 로그인하세요</div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
-      <div style={{ minHeight:"100vh", background:"#040d1a", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", fontFamily:"'Noto Sans KR',sans-serif" }}>
-        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:700, fontSize:28, color:"#f1f5f9", marginBottom:16 }}>
-          <span style={{ color:"#3B82F6" }}>▶</span> VIDEO<span style={{ color:"#3B82F6" }}>FLOW</span>
-        </div>
+      <div style={bgWrap}>
+        <link href={FONTS} rel="stylesheet"/>
+        {logoEl}
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
           {[0,1,2].map(i => (
             <div key={i} style={{ width:8, height:8, borderRadius:"50%", background:"#3B82F6", animation:`pulse 1.2s ${i*0.2}s infinite ease-in-out` }}/>
           ))}
         </div>
         <div style={{ fontSize:12, color:"#334155", marginTop:16 }}>데이터 불러오는 중...</div>
-        <style>{`@keyframes pulse { 0%,100%{opacity:0.2;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.2)} }`}</style>
+        <style>{pulseStyle}</style>
       </div>
     );
   }
@@ -992,6 +1059,15 @@ export default function VideoFlow() {
                 whiteSpace:"nowrap", flexShrink:0 }}>
               + 추가
             </button>
+
+            {/* 사용자 정보 + 로그아웃 */}
+            <div style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0, marginLeft:4 }}>
+              {user.photoURL && <img src={user.photoURL} alt="" style={{ width:28, height:28, borderRadius:"50%", border:"2px solid #1d4ed8" }}/>}
+              {!isMobile && <span style={{ fontSize:11, color:"#64748b", whiteSpace:"nowrap", maxWidth:100, overflow:"hidden", textOverflow:"ellipsis" }}>{user.displayName || user.email}</span>}
+              <button onClick={handleLogout} style={{ padding:"4px 8px", borderRadius:6, border:"1px solid #1e293b", background:"none", color:"#475569", fontSize:10, cursor:"pointer", whiteSpace:"nowrap", fontFamily:"inherit" }}>
+                로그아웃
+              </button>
+            </div>
           </div>
         </div>
       </div>
