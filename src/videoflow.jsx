@@ -804,8 +804,8 @@ export default function VideoFlow() {
             <button onClick={addVideoMember} style={{ padding:"9px 14px", borderRadius:8, border:"none", background:"#1d4ed8", color:"#fff", fontWeight:700, cursor:"pointer", fontSize:12, fontFamily:"inherit", whiteSpace:"nowrap" }}>+ 추가</button>
           </div>
         </div>
-      </div>  {/* end gridSettings */}
-    </div>   {/* end outer flex column */}
+      </div>
+    </div>
     );
   };
 
