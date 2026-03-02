@@ -128,7 +128,7 @@ export default function VideoFlow() {
   };
 
   const gridStats        = { display:"grid", gap:10,  gridTemplateColumns:`repeat(${col(2,2,4,4)},1fr)` };
-  const gridCards        = { display:"grid", gap:14,  gridTemplateColumns:`repeat(${col(1,2,4,8)},1fr)` };
+  const gridCards        = { display:"grid", gap:14,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
   const gridMonths       = { display:"grid", gap:14,  gridTemplateColumns:`repeat(${col(1,2,3,6)},1fr)` };
   const gridMembers      = { display:"grid", gap:12,  gridTemplateColumns:`repeat(${col(2,3,4,5)},1fr)` };
   const gridMemberTasks  = { display:"grid", gap:12,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
@@ -497,8 +497,8 @@ export default function VideoFlow() {
     const monthStr = `${filterMonth.split('-')[0]}년 ${parseInt(filterMonth.split('-')[1])}월`;
 
     // 날짜 셀 너비 - 화면에 따라 조정
-    const dayW = isMobile ? 22 : isTablet ? 26 : 30;
-    const labelW = isMobile ? 120 : isTablet ? 150 : 200;
+    const dayW = isMobile ? 24 : isTablet ? 30 : 36;
+    const labelW = isMobile ? 130 : isTablet ? 160 : 220;
     const totalW = labelW + (dayW * daysInMonth);
 
     return (
@@ -513,7 +513,7 @@ export default function VideoFlow() {
                 const wd = new Date(parseInt(filterMonth.split('-')[0]), parseInt(filterMonth.split('-')[1])-1, d).getDay();
                 const isTd = `${filterMonth}-${String(d).padStart(2,'0')}` === todayStr;
                 return (
-                  <div key={d} style={{ textAlign:"center", fontSize:isMobile?8:10,
+                  <div key={d} style={{ textAlign:"center", fontSize:isMobile?10:12,
                     color: isTd?"#60a5fa": wd===0||wd===6?"#334155":"#475569",
                     fontWeight:isTd?800:400,
                     background:isTd?"#1d3461":wd===0||wd===6?"#0a1020":undefined,
@@ -538,8 +538,8 @@ export default function VideoFlow() {
                   <div style={{ display:"flex", alignItems:"center", gap:6, paddingRight:10 }}>
                     <div style={{ width:3, height:32, borderRadius:4, background:dc, flexShrink:0 }}/>
                     <div style={{ minWidth:0 }}>
-                      <div style={{ fontSize:isMobile?10:12, fontWeight:600, color:"#cbd5e1", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{task.name}</div>
-                      <div style={{ fontSize:isMobile?8:10, color:"#475569" }}>{task.assignees.join("·")}</div>
+                      <div style={{ fontSize:isMobile?11:14, fontWeight:600, color:"#cbd5e1", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{task.name}</div>
+                      <div style={{ fontSize:isMobile?10:12, color:"#475569" }}>{task.assignees.join("·")}</div>
                     </div>
                   </div>
                   {days.map(d => {
