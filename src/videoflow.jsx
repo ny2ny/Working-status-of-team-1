@@ -15,6 +15,17 @@ const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
 const DATA_DOC = doc(db, "videoflow", "data");
 
+// ───── RESPONSIVE HOOK ─────
+function useWindowWidth() {
+  const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return width;
+}
+
 // ───── DATA SETUP ─────
 const VIDEO_TEAMS = {
   "영상기획1팀": ["강승구", "최대하", "정호성"],
@@ -103,6 +114,10 @@ const getProgress = (t) => t.progressLog.length > 0 ? t.progressLog[t.progressLo
 
 // ───── MAIN COMPONENT ─────
 export default function VideoFlow() {
+  const W = useWindowWidth();
+  const isMobile = W < 560;
+  const isTablet = W < 900;
+  const isPC = W >= 900;
   const [tasks, setTasks] = useState(INIT_TASKS);
   const [clientDepts, setClientDepts] = useState(INIT_CLIENT_DEPTS);
   const [videoTeamMembers, setVideoTeamMembers] = useState(VIDEO_TEAMS);
@@ -898,112 +913,69 @@ export default function VideoFlow() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
         *{box-sizing:border-box}
-
-        /* 그리드 레이아웃 */
-        .grid-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
-        .grid-stats{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
-        .grid-months{display:grid;gap:14px;grid-template-columns:repeat(4,1fr)}
-        .grid-members{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr))}
-        .grid-member-tasks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
-        .grid-completed{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
-        .grid-settings{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
-
-        /* 헤더 - 항상 1줄 유지 */
-        .header-wrap{background:#070f1e;border-bottom:1px solid #0f1e38;padding:0 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.4)}
-        .header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:12px;overflow:hidden}
-        .header-left{display:flex;align-items:center;gap:10px;flex-shrink:0;min-width:0}
-        .header-logo{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;color:#f1f5f9;white-space:nowrap;flex-shrink:0}
-        .header-subtitle{font-size:11px;color:#1e3a5f;font-family:'IBM Plex Mono',monospace;background:#0b1929;padding:3px 8px;border-radius:6px;white-space:nowrap}
-        .save-indicator{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;flex-shrink:0;white-space:nowrap}
-
-        /* 네비게이션 - 항상 1줄, 스크롤 가능 */
-        .nav-scroll{display:flex;align-items:center;gap:5px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+        .grid-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"100%":"320px"},1fr))}
+        .grid-stats{display:grid;gap:10px;grid-template-columns:repeat(${isMobile?2:4},1fr)}
+        .grid-months{display:grid;gap:14px;grid-template-columns:repeat(${W<400?1:W<560?2:W<900?2:W<1200?3:4},1fr)}
+        .grid-members{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+        .grid-member-tasks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"100%":"280px"},1fr))}
+        .grid-completed{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(${isMobile?"100%":"320px"},1fr))}
+        .grid-settings{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(${isMobile?"100%":"360px"},1fr))}
+        .nav-scroll{display:flex;align-items:center;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap}
         .nav-scroll::-webkit-scrollbar{display:none}
-        .nav-btn{padding:6px 12px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:all 0.15s}
-        .nav-add{padding:6px 14px;border-radius:8px;border:none;background:#1d4ed8;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
-
-        .main-pad{max-width:1440px;margin:0 auto;padding:24px 28px}
-
-        /* 1200px 이하 */
-        @media(max-width:1200px){
-          .grid-months{grid-template-columns:repeat(3,1fr)}
-          .header-subtitle{display:none}
-        }
-
-        /* 900px 이하 */
-        @media(max-width:900px){
-          .grid-stats{grid-template-columns:repeat(2,1fr)}
-          .grid-months{grid-template-columns:repeat(3,1fr)}
-          .header-wrap{padding:0 14px}
-          .main-pad{padding:16px 14px}
-          .nav-btn{padding:5px 9px!important;font-size:11px!important}
-          .nav-add{padding:5px 10px!important;font-size:11px!important}
-        }
-
-        /* 768px 이하 (태블릿) */
-        @media(max-width:768px){
-          .grid-months{grid-template-columns:repeat(2,1fr)}
-          .grid-settings{grid-template-columns:1fr}
-          .main-pad{padding:14px 12px}
-          .nav-btn{padding:5px 8px!important;font-size:10px!important}
-          .nav-add{padding:5px 8px!important;font-size:10px!important}
-        }
-
-        /* 560px 이하 (모바일) */
-        @media(max-width:560px){
-          .grid-stats{grid-template-columns:repeat(2,1fr)}
-          .grid-months{grid-template-columns:repeat(2,1fr)}
-          .grid-cards{grid-template-columns:1fr}
-          .grid-settings{grid-template-columns:1fr}
-          .grid-completed{grid-template-columns:1fr}
-          .main-pad{padding:10px}
-          .header-wrap{padding:0 10px}
-          .nav-btn{padding:4px 7px!important;font-size:10px!important}
-          .header-logo{font-size:14px}
-        }
-
-        /* 400px 이하 */
-        @media(max-width:400px){
-          .grid-months{grid-template-columns:1fr}
-        }
       `}</style>
 
-      {/* Header */}
-      <div className="header-wrap">
-        <div className="header-inner">
-          <div className="header-left">
-            <div className="header-logo">
+      {/* Header - 항상 1줄 */}
+      <div style={{ background:"#070f1e", borderBottom:"1px solid #0f1e38", padding:`0 ${isMobile?"10px":"24px"}`, position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 20px rgba(0,0,0,0.4)" }}>
+        <div style={{ maxWidth:1440, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:56, gap:8, overflow:"hidden" }}>
+
+          {/* 왼쪽: 로고 + 저장상태 */}
+          <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:700, fontSize:isMobile?14:16, color:"#f1f5f9", whiteSpace:"nowrap" }}>
               <span style={{ color:"#3B82F6" }}>▶</span> VIDEO<span style={{ color:"#3B82F6" }}>FLOW</span>
             </div>
-            <div className="header-subtitle">영상사업부 업무관리</div>
-            <div className="save-indicator" style={{
+            {!isTablet && (
+              <div style={{ fontSize:11, color:"#1e3a5f", fontFamily:"'IBM Plex Mono',monospace", background:"#0b1929", padding:"3px 8px", borderRadius:6, whiteSpace:"nowrap" }}>영상사업부 업무관리</div>
+            )}
+            <div style={{ display:"flex", alignItems:"center", gap:5, padding:"3px 8px", borderRadius:6, flexShrink:0,
               background: saveStatus==="saving"?"#0a1929": saveStatus==="error"?"#2d0a0a":"#0a1e0f",
               border: `1px solid ${saveStatus==="saving"?"#1d4ed8": saveStatus==="error"?"#7f1d1d":"#166534"}`,
               transition:"all 0.3s" }}>
               <div style={{ width:6, height:6, borderRadius:"50%",
                 background: saveStatus==="saving"?"#3B82F6": saveStatus==="error"?"#ef4444":"#22c55e",
-                boxShadow: saveStatus==="saving"?"0 0 6px #3B82F6":saveStatus==="saved"?"0 0 6px #22c55e":undefined,
                 animation: saveStatus==="saving"?"pulse 1s infinite ease-in-out":undefined }}/>
-              <span style={{ fontSize:10, fontFamily:"'IBM Plex Mono',monospace",
-                color: saveStatus==="saving"?"#60a5fa": saveStatus==="error"?"#f87171":"#4ade80" }}>
-                {saveStatus==="saving"?"저장 중...": saveStatus==="error"?"저장 실패":"저장됨"}
-              </span>
+              {!isMobile && (
+                <span style={{ fontSize:10, fontFamily:"'IBM Plex Mono',monospace",
+                  color: saveStatus==="saving"?"#60a5fa": saveStatus==="error"?"#f87171":"#4ade80", whiteSpace:"nowrap" }}>
+                  {saveStatus==="saving"?"저장 중...": saveStatus==="error"?"저장 실패":"저장됨"}
+                </span>
+              )}
             </div>
           </div>
-          <div className="nav-scroll">
+
+          {/* 오른쪽: 네비게이션 - overflow scroll로 1줄 유지 */}
+          <div className="nav-scroll" style={{ flexShrink:1, minWidth:0 }}>
             {[["board","업무보드"],["monthly","월별"],["annual","연간"],["members","팀원"],["completed","완료"],["settings","⚙ 관리"]].map(([v,l])=>(
-              <button key={v} onClick={()=>setView(v)} className="nav-btn"
-                style={{ border:`1px solid ${view===v?"#3B82F6":"#0f1e38"}`,
-                  background:view===v?"#0d2348":"none", color:view===v?"#60a5fa":"#475569" }}>
+              <button key={v} onClick={()=>setView(v)}
+                style={{ padding:isMobile?"4px 7px":"5px 11px", borderRadius:8,
+                  border:`1px solid ${view===v?"#3B82F6":"#0f1e38"}`,
+                  background:view===v?"#0d2348":"none", color:view===v?"#60a5fa":"#475569",
+                  fontWeight:600, fontSize:isMobile?10:11, cursor:"pointer", fontFamily:"inherit",
+                  whiteSpace:"nowrap", flexShrink:0 }}>
                 {l}
               </button>
             ))}
-            <button onClick={openAdd} className="nav-add">+ 추가</button>
+            <button onClick={openAdd}
+              style={{ padding:isMobile?"4px 8px":"5px 12px", borderRadius:8, border:"none",
+                background:"#1d4ed8", color:"#fff", fontWeight:700,
+                fontSize:isMobile?10:11, cursor:"pointer", fontFamily:"inherit",
+                whiteSpace:"nowrap", flexShrink:0 }}>
+              + 추가
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="main-pad">
+      <div style={{ maxWidth:1440, margin:"0 auto", padding:isMobile?"10px":"24px 28px" }}>
 
         {/* ── Board View ── */}
         {view === "board" && (
