@@ -118,6 +118,15 @@ export default function VideoFlow() {
   const isMobile = W < 560;
   const isTablet = W < 900;
   const isPC = W >= 900;
+
+  // ── 반응형 그리드 스타일 (inline으로 직접 적용) ──
+  const gridStats  = { display:"grid", gap:10, gridTemplateColumns:`repeat(${W<900?2:4},1fr)` };
+  const gridCards  = { display:"grid", gap:14, gridTemplateColumns:`repeat(auto-fill,minmax(${isMobile?"100%":isTablet?"260px":"320px"},1fr))` };
+  const gridMonths = { display:"grid", gap:14, gridTemplateColumns:`repeat(${W<400?1:W<560?2:W<900?2:W<1200?3:4},1fr)` };
+  const gridMembers= { display:"grid", gap:12, gridTemplateColumns:`repeat(auto-fill,minmax(${isMobile?"140px":"160px"},1fr))` };
+  const gridMemberTasks = { display:"grid", gap:12, gridTemplateColumns:`repeat(auto-fill,minmax(${isMobile?"100%":isTablet?"240px":"280px"},1fr))` };
+  const gridCompleted   = { display:"grid", gap:16, gridTemplateColumns:`repeat(auto-fit,minmax(${isMobile?"100%":isTablet?"260px":"320px"},1fr))` };
+  const gridSettings    = { display:"grid", gap:20, gridTemplateColumns:W<768?"1fr":"repeat(auto-fit,minmax(360px,1fr))" };
   const [tasks, setTasks] = useState(INIT_TASKS);
   const [clientDepts, setClientDepts] = useState(INIT_CLIENT_DEPTS);
   const [videoTeamMembers, setVideoTeamMembers] = useState(VIDEO_TEAMS);
@@ -556,7 +565,7 @@ export default function VideoFlow() {
     });
     return (
       <div>
-        <div className="grid-completed" style={{ marginBottom:24 }}>
+        <div style={{ ...gridCompleted, marginBottom:24 }}>
           {Object.entries(byTeam).map(([team, list])=>(
             <div key={team} style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:14, padding:22 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
@@ -595,7 +604,7 @@ export default function VideoFlow() {
     const validTeam = clientTeams.includes(settingsTeam) ? settingsTeam : clientTeams[0] || "";
 
     return (
-      <div className="grid-settings">
+      <div style={gridSettings}>
         {/* Client dept members */}
         <div style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:14, padding:22 }}>
           <div style={{ fontWeight:700, fontSize:16, color:"#f1f5f9", marginBottom:16 }}>의뢰부서 팀원 관리</div>
@@ -693,7 +702,7 @@ export default function VideoFlow() {
             </button>
           ))}
         </div>
-        <div className="grid-stats" style={{ marginBottom:24 }}>
+        <div style={{ ...gridStats, marginBottom:24 }}>
           {[{label:"전체 업무", val:yTotal, color:"#60a5fa"},{label:"진행중", val:yActive, color:"#3B82F6"},{label:"지연", val:yDelayed, color:"#EF4444"},{label:"완료", val:yCompleted, color:"#4ade80"}].map(s=>(
             <div key={s.label} style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:12, padding:"16px 18px" }}>
               <div style={{ fontSize:10, color:"#334155", marginBottom:4, textTransform:"uppercase", letterSpacing:"0.06em" }}>{s.label}</div>
@@ -702,7 +711,7 @@ export default function VideoFlow() {
             </div>
           ))}
         </div>
-        <div className="grid-months">
+        <div style={gridMonths}>
           {MONTHS.map((mName, mi) => {
             const mNum = mi+1;
             const mTasks = byMonth[mNum];
@@ -802,7 +811,7 @@ export default function VideoFlow() {
             </div>
           </div>
         </div>
-        <div className="grid-stats" style={{ marginBottom:24 }}>
+        <div style={{ ...gridStats, marginBottom:24 }}>
           {[{label:"전체 업무", val:memberTasks.length, color:"#60a5fa"},{label:"완료", val:totalDone, color:"#4ade80"},{label:"진행중", val:totalActive, color:"#3B82F6"},{label:"평균 진척도", val:`${avgPct}%`, color:"#f59e0b"}].map(s=>(
             <div key={s.label} style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:12, padding:"14px 18px" }}>
               <div style={{ fontSize:10, color:"#334155", marginBottom:4, textTransform:"uppercase", letterSpacing:"0.06em" }}>{s.label}</div>
@@ -837,7 +846,7 @@ export default function VideoFlow() {
                 <div style={{ height:1, flex:1, background:"#1a2540" }}/>
                 <div style={{ fontSize:12, color:"#334155" }}>{mDone}/{mTasks.length} 완료</div>
               </div>
-              <div className="grid-member-tasks">
+              <div style={gridMemberTasks}>
                 {mTasks.map(task => {
                   const pct = getProgress(task);
                   const sm = getStatusMeta(task);
@@ -913,13 +922,6 @@ export default function VideoFlow() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
         *{box-sizing:border-box}
-        .grid-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"100%":isTablet?"280px":"320px"},1fr))}
-        .grid-stats{display:grid;gap:10px;grid-template-columns:repeat(${W<900?2:4},1fr)}
-        .grid-months{display:grid;gap:14px;grid-template-columns:repeat(${W<400?1:W<560?2:W<900?2:W<1200?3:4},1fr)}
-        .grid-members{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"130px":"160px"},1fr))}
-        .grid-member-tasks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(${isMobile?"100%":isTablet?"240px":"280px"},1fr))}
-        .grid-completed{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(${isMobile?"100%":isTablet?"260px":"320px"},1fr))}
-        .grid-settings{display:grid;gap:20px;grid-template-columns:${W<768?"1fr":"repeat(auto-fit,minmax(360px,1fr))"}}
         .nav-scroll{display:flex;align-items:center;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap}
         .nav-scroll::-webkit-scrollbar{display:none}
       `}</style>
@@ -981,7 +983,7 @@ export default function VideoFlow() {
         {view === "board" && (
           <>
             {/* Stats */}
-            <div className="grid-stats" style={{ marginBottom:20 }}>
+            <div style={{ ...gridStats, marginBottom:20 }}>
               {stats.map(s=>(
                 <div key={s.label} style={{ background:"#0b1120", border:"1px solid #1a2540", borderRadius:10, padding:"13px 16px" }}>
                   <div style={{ fontSize:10, color:"#334155", marginBottom:3, textTransform:"uppercase", letterSpacing:"0.05em" }}>{s.label}</div>
@@ -1016,7 +1018,7 @@ export default function VideoFlow() {
               ))}
             </div>
 
-            <div className="grid-cards">
+            <div style={gridCards}>
               {filteredTasks.map(t=><TaskCard key={t.id} task={t}/>)}
               {filteredTasks.length===0 && <div style={{ gridColumn:"1/-1", textAlign:"center", padding:48, color:"#1e3a5f" }}>해당 조건의 업무가 없습니다.</div>}
             </div>
@@ -1053,7 +1055,7 @@ export default function VideoFlow() {
                       <div style={{ fontWeight:700, fontSize:15, color:"#60a5fa" }}>{team}</div>
                       <div style={{ height:1, flex:1, background:"#1a2540" }}/>
                     </div>
-                    <div className="grid-members">
+                    <div style={gridMembers}>
                       {members.map(m => {
                         const mTasks = tasks.filter(t=>t.assignees.includes(m));
                         const done = mTasks.filter(t=>t.status==="completed").length;
