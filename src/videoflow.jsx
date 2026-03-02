@@ -128,8 +128,8 @@ export default function VideoFlow() {
   };
 
   const gridStats        = { display:"grid", gap:10,  gridTemplateColumns:`repeat(${col(2,2,4,4)},1fr)` };
-  const gridCards        = { display:"grid", gap:14,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
-  const gridMonths       = { display:"grid", gap:14,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
+  const gridCards        = { display:"grid", gap:14,  gridTemplateColumns:`repeat(${col(1,2,4,8)},1fr)` };
+  const gridMonths       = { display:"grid", gap:14,  gridTemplateColumns:`repeat(${col(1,2,3,6)},1fr)` };
   const gridMembers      = { display:"grid", gap:12,  gridTemplateColumns:`repeat(${col(2,3,4,5)},1fr)` };
   const gridMemberTasks  = { display:"grid", gap:12,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
   const gridCompleted    = { display:"grid", gap:16,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
@@ -484,7 +484,6 @@ export default function VideoFlow() {
     );
   };
 
-  // ── Monthly View ──
   const MonthlyView = () => {
     const grouped = {};
     monthTasks.forEach(t => {
@@ -497,19 +496,28 @@ export default function VideoFlow() {
     const days = Array.from({length: daysInMonth}, (_,i) => i+1);
     const monthStr = `${filterMonth.split('-')[0]}년 ${parseInt(filterMonth.split('-')[1])}월`;
 
+    // 날짜 셀 너비 - 화면에 따라 조정
+    const dayW = isMobile ? 22 : isTablet ? 26 : 30;
+    const labelW = isMobile ? 120 : isTablet ? 150 : 200;
+    const totalW = labelW + (dayW * daysInMonth);
+
     return (
-      <div>
+      <div style={{ maxWidth:1200, margin:"0 auto" }}>
         <div style={{ fontWeight:700, fontSize:18, color:"#f1f5f9", marginBottom:20 }}>{monthStr} 업무 타임라인</div>
-        <div style={{ background:"#0b1120", borderRadius:14, padding:20, border:"1px solid #1a2540", overflowX:"auto" }}>
-          <div style={{ minWidth: 600 }}>
+        <div style={{ background:"#0b1120", borderRadius:14, padding:isMobile?12:24, border:"1px solid #1a2540", overflowX:"auto" }}>
+          <div style={{ minWidth: totalW }}>
             {/* Day header */}
-            <div style={{ display:"grid", gridTemplateColumns:`180px repeat(${daysInMonth}, 1fr)`, marginBottom:8 }}>
-              <div style={{ fontSize:11, color:"#334155" }}>업무</div>
+            <div style={{ display:"grid", gridTemplateColumns:`${labelW}px repeat(${daysInMonth}, ${dayW}px)`, marginBottom:10, alignItems:"center" }}>
+              <div style={{ fontSize:11, color:"#334155", fontWeight:600 }}>업무명</div>
               {days.map(d=>{
                 const wd = new Date(parseInt(filterMonth.split('-')[0]), parseInt(filterMonth.split('-')[1])-1, d).getDay();
                 const isTd = `${filterMonth}-${String(d).padStart(2,'0')}` === todayStr;
                 return (
-                  <div key={d} style={{ textAlign:"center", fontSize:9, color: isTd?"#60a5fa": wd===0||wd===6?"#334155":"#475569", fontWeight:isTd?800:400, background:isTd?"#1d3461":undefined, borderRadius:3, padding:"1px 0" }}>
+                  <div key={d} style={{ textAlign:"center", fontSize:isMobile?8:10,
+                    color: isTd?"#60a5fa": wd===0||wd===6?"#334155":"#475569",
+                    fontWeight:isTd?800:400,
+                    background:isTd?"#1d3461":wd===0||wd===6?"#0a1020":undefined,
+                    borderRadius:3, padding:"2px 0" }}>
                     {d}
                   </div>
                 );
@@ -526,12 +534,12 @@ export default function VideoFlow() {
               const startCol = sM <= filterMonth ? sDay : 1;
               const endCol = eM >= filterMonth ? eDay : daysInMonth;
               return (
-                <div key={task.id} style={{ display:"grid", gridTemplateColumns:`180px repeat(${daysInMonth}, 1fr)`, marginBottom:6, alignItems:"center" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:6, paddingRight:8 }}>
-                    <div style={{ width:3, height:28, borderRadius:4, background:dc, flexShrink:0 }}/>
-                    <div>
-                      <div style={{ fontSize:11, fontWeight:600, color:"#cbd5e1", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:150 }}>{task.name}</div>
-                      <div style={{ fontSize:9, color:"#475569" }}>{task.assignees.join("·")}</div>
+                <div key={task.id} style={{ display:"grid", gridTemplateColumns:`${labelW}px repeat(${daysInMonth}, ${dayW}px)`, marginBottom:8, alignItems:"center" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:6, paddingRight:10 }}>
+                    <div style={{ width:3, height:32, borderRadius:4, background:dc, flexShrink:0 }}/>
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:isMobile?10:12, fontWeight:600, color:"#cbd5e1", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{task.name}</div>
+                      <div style={{ fontSize:isMobile?8:10, color:"#475569" }}>{task.assignees.join("·")}</div>
                     </div>
                   </div>
                   {days.map(d => {
@@ -541,11 +549,13 @@ export default function VideoFlow() {
                     const dateStr = `${filterMonth}-${String(d).padStart(2,'0')}`;
                     const logEntry = task.progressLog.find(l=>l.date===dateStr);
                     return (
-                      <div key={d} style={{ height:24, position:"relative" }}>
+                      <div key={d} style={{ height:32, position:"relative" }}>
                         {inRange && (
-                          <div style={{ position:"absolute", top:6, left: isStart?4:0, right: isEnd?4:0, height:12, background: task.status==="completed"?"#166534":`${dc}33`, borderRadius: isStart&&isEnd?6: isStart?"6px 0 0 6px": isEnd?"0 6px 6px 0":"0",
-                            border:`1px solid ${task.status==="completed"?"#22c55e":dc}44`, overflow:"hidden" }}>
-                            <div style={{ height:"100%", background: task.status==="completed"?"#22c55e":dc, width:`${pct}%`, borderRadius:"inherit", opacity:0.7 }}/>
+                          <div style={{ position:"absolute", top:8, left:isStart?3:0, right:isEnd?3:0, height:16,
+                            background: task.status==="completed"?"#166534":`${dc}33`,
+                            borderRadius: isStart&&isEnd?6: isStart?"6px 0 0 6px": isEnd?"0 6px 6px 0":"0",
+                            border:`1px solid ${task.status==="completed"?"#22c55e":dc}55`, overflow:"hidden" }}>
+                            <div style={{ height:"100%", background: task.status==="completed"?"#22c55e":dc, width:`${pct}%`, borderRadius:"inherit", opacity:0.75 }}/>
                             {logEntry && <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", fontSize:8, fontWeight:700, color:"#fff", whiteSpace:"nowrap" }}>{logEntry.progress}%</div>}
                           </div>
                         )}
@@ -555,7 +565,7 @@ export default function VideoFlow() {
                 </div>
               );
             })}
-            {monthTasks.length === 0 && <div style={{ textAlign:"center", padding:32, color:"#334155" }}>해당 월에 업무가 없습니다.</div>}
+            {monthTasks.length === 0 && <div style={{ textAlign:"center", padding:40, color:"#334155" }}>해당 월에 업무가 없습니다.</div>}
           </div>
         </div>
       </div>
@@ -729,49 +739,50 @@ export default function VideoFlow() {
             const isPast = mStr < getYM(todayStr);
             return (
               <div key={mName} style={{ background:"#0b1120", border:`1px solid ${isCurrent?"#1d4ed8":"#1a2540"}`,
-                borderRadius:14, padding:18, opacity:!isPast&&!isCurrent&&mTasks.length===0?0.4:1 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+                borderRadius:16, padding:isPC?22:16, opacity:!isPast&&!isCurrent&&mTasks.length===0?0.4:1,
+                minHeight: isPC?220:160 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <span style={{ fontWeight:800, fontSize:16, color:isCurrent?"#60a5fa":"#cbd5e1" }}>{mName}</span>
+                    <span style={{ fontWeight:800, fontSize:isPC?18:15, color:isCurrent?"#60a5fa":"#cbd5e1" }}>{mName}</span>
                     {isCurrent && <span style={{ fontSize:9, fontWeight:700, padding:"2px 7px", borderRadius:10, background:"#0d2348", border:"1px solid #1d4ed8", color:"#60a5fa" }}>이번달</span>}
                   </div>
-                  <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:22, fontWeight:800, color:mTasks.length===0?"#1e3a5f":mCompleted===mTasks.length&&mTasks.length>0?"#4ade80":"#f1f5f9" }}>{mTasks.length}</span>
+                  <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:isPC?26:20, fontWeight:800, color:mTasks.length===0?"#1e3a5f":mCompleted===mTasks.length&&mTasks.length>0?"#4ade80":"#f1f5f9" }}>{mTasks.length}</span>
                 </div>
                 {mTasks.length > 0 && (
                   <>
-                    <div style={{ display:"flex", gap:3, marginBottom:10, height:5, borderRadius:4, overflow:"hidden", background:"#1a2540" }}>
+                    <div style={{ display:"flex", gap:3, marginBottom:12, height:5, borderRadius:4, overflow:"hidden", background:"#1a2540" }}>
                       <div style={{ flex:mCompleted, background:"#22c55e", borderRadius:4 }}/>
                       <div style={{ flex:mActive, background:"#3B82F6", borderRadius:4 }}/>
                     </div>
-                    <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                      {mTasks.slice(0,4).map(t => {
+                    <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+                      {mTasks.slice(0, isPC?5:3).map(t => {
                         const pct = getProgress(t);
                         const dc = getDeptColor(t.clientDept);
                         const sm = getStatusMeta(t);
                         return (
-                          <div key={t.id} onClick={()=>setDetailModal(t)} style={{ cursor:"pointer", padding:"7px 10px", background:"#070e1a", borderRadius:8, borderLeft:`3px solid ${t.status==="completed"?"#22c55e":dc}` }}>
-                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                              <span style={{ fontSize:11, fontWeight:600, color:"#cbd5e1", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:"65%" }}>{t.name}</span>
-                              <span style={{ fontSize:10, fontWeight:700, color:sm.text }}>{pct}%</span>
+                          <div key={t.id} onClick={()=>setDetailModal(t)} style={{ cursor:"pointer", padding:isPC?"9px 12px":"7px 10px", background:"#070e1a", borderRadius:9, borderLeft:`3px solid ${t.status==="completed"?"#22c55e":dc}` }}>
+                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
+                              <span style={{ fontSize:isPC?12:11, fontWeight:600, color:"#cbd5e1", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:"70%" }}>{t.name}</span>
+                              <span style={{ fontSize:isPC?11:10, fontWeight:700, color:sm.text, flexShrink:0 }}>{pct}%</span>
                             </div>
                             <div style={{ display:"flex", gap:6, alignItems:"center" }}>
                               <div style={{ flex:1, background:"#1a2540", borderRadius:4, height:4, overflow:"hidden" }}>
                                 <div style={{ height:"100%", background:t.status==="completed"?"#22c55e":dc, width:`${pct}%`, borderRadius:4 }}/>
                               </div>
-                              <span style={{ fontSize:9, color:"#334155" }}>{t.assignees[0]}{t.assignees.length>1&&`+${t.assignees.length-1}`}</span>
+                              <span style={{ fontSize:9, color:"#475569", flexShrink:0 }}>{t.assignees[0]}{t.assignees.length>1&&`+${t.assignees.length-1}`}</span>
                             </div>
                           </div>
                         );
                       })}
-                      {mTasks.length > 4 && <div style={{ textAlign:"center", fontSize:11, color:"#334155", padding:"4px 0" }}>+{mTasks.length-4}개 더</div>}
+                      {mTasks.length > (isPC?5:3) && <div style={{ textAlign:"center", fontSize:11, color:"#334155", padding:"4px 0" }}>+{mTasks.length-(isPC?5:3)}개 더</div>}
                     </div>
-                    <div style={{ display:"flex", gap:10, marginTop:10, fontSize:10 }}>
+                    <div style={{ display:"flex", gap:10, marginTop:12, fontSize:isPC?11:10 }}>
                       <span style={{ color:"#4ade80" }}>✓ {mCompleted}완료</span>
                       <span style={{ color:"#60a5fa" }}>▶ {mActive}진행</span>
                     </div>
                   </>
                 )}
-                {mTasks.length === 0 && <div style={{ textAlign:"center", padding:"16px 0", fontSize:12, color:"#1e3a5f" }}>{isPast?"업무 없음":"예정 없음"}</div>}
+                {mTasks.length === 0 && <div style={{ textAlign:"center", padding:"20px 0", fontSize:12, color:"#1e3a5f" }}>{isPast?"업무 없음":"예정 없음"}</div>}
               </div>
             );
           })}
@@ -923,9 +934,10 @@ export default function VideoFlow() {
   }
 
   return (
-    <div style={{ minHeight:"100vh", background:"#040d1a", color:"#f1f5f9", fontFamily:"'Noto Sans KR',sans-serif" }}>
+    <div style={{ minHeight:"100vh", background:"#040d1a", color:"#f1f5f9", fontFamily:"'Noto Sans KR',sans-serif", width:"100%" }}>
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
       <style>{`
+        html, body { margin:0; padding:0; background:#040d1a; }
         @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
         *{box-sizing:border-box}
