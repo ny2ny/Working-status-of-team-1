@@ -116,17 +116,24 @@ const getProgress = (t) => t.progressLog.length > 0 ? t.progressLog[t.progressLo
 export default function VideoFlow() {
   const W = useWindowWidth();
   const isMobile = W < 560;
-  const isTablet = W < 900;
+  const isTablet = W >= 560 && W < 900;
   const isPC = W >= 900;
 
-  // ── 반응형 그리드 스타일 (inline으로 직접 적용) ──
-  const gridStats  = { display:"grid", gap:10, gridTemplateColumns:`repeat(${W<900?2:4},1fr)` };
-  const gridCards  = { display:"grid", gap:14, gridTemplateColumns:`repeat(auto-fill,minmax(${isMobile?"100%":isTablet?"260px":"320px"},1fr))` };
-  const gridMonths = { display:"grid", gap:14, gridTemplateColumns:`repeat(${W<400?1:W<560?2:W<900?2:W<1200?3:4},1fr)` };
-  const gridMembers= { display:"grid", gap:12, gridTemplateColumns:`repeat(auto-fill,minmax(${isMobile?"140px":"160px"},1fr))` };
-  const gridMemberTasks = { display:"grid", gap:12, gridTemplateColumns:`repeat(auto-fill,minmax(${isMobile?"100%":isTablet?"240px":"280px"},1fr))` };
-  const gridCompleted   = { display:"grid", gap:16, gridTemplateColumns:`repeat(auto-fit,minmax(${isMobile?"100%":isTablet?"260px":"320px"},1fr))` };
-  const gridSettings    = { display:"grid", gap:20, gridTemplateColumns:W<768?"1fr":"repeat(auto-fit,minmax(360px,1fr))" };
+  // ── 반응형 그리드 - 명시적 열 수로 직접 지정 ──
+  const col = (sm, md, lg, xl) => {
+    if (W < 560) return sm;
+    if (W < 900) return md;
+    if (W < 1200) return lg;
+    return xl;
+  };
+
+  const gridStats        = { display:"grid", gap:10,  gridTemplateColumns:`repeat(${col(2,2,4,4)},1fr)` };
+  const gridCards        = { display:"grid", gap:14,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
+  const gridMonths       = { display:"grid", gap:14,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
+  const gridMembers      = { display:"grid", gap:12,  gridTemplateColumns:`repeat(${col(2,3,4,5)},1fr)` };
+  const gridMemberTasks  = { display:"grid", gap:12,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
+  const gridCompleted    = { display:"grid", gap:16,  gridTemplateColumns:`repeat(${col(1,2,3,4)},1fr)` };
+  const gridSettings     = { display:"grid", gap:20,  gridTemplateColumns:`repeat(${col(1,1,2,2)},1fr)` };
   const [tasks, setTasks] = useState(INIT_TASKS);
   const [clientDepts, setClientDepts] = useState(INIT_CLIENT_DEPTS);
   const [videoTeamMembers, setVideoTeamMembers] = useState(VIDEO_TEAMS);
