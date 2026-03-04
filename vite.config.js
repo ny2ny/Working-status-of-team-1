@@ -3,5 +3,5 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/Video-production/',  // ← 이 줄 추가!
+  base: '/Working-status-of-team-1/',
 })
